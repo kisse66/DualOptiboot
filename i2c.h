@@ -47,7 +47,7 @@ static inline void EEPROM_init()
 
 static inline uint8_t FLASH_readByte(uint32_t eeaddr)
 {
-    uint8_t twcr, n = 0, buf=0xFF;
+    uint8_t twcr, n = 0, m = 0, buf=0xFF;
 
   /*
    * Note [8]
@@ -58,9 +58,11 @@ restart:
         return 0xFF;
 begin:
 
+    m=0;
     TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN); /* send start condition */
-    while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
-    switch ((twst = TW_STATUS)) {
+    while (((TWCR & _BV(TWINT)) == 0) & (m++ < MAX_ITER)) ; /* wait for transmission */
+    if (m == MAX_ITER) return 0xFF;
+	switch ((twst = TW_STATUS)) {
         case TW_REP_START:		// OK, but should not happen 
         case TW_START:
             break;
@@ -73,10 +75,12 @@ begin:
 
     /* Note [10] */
     /* send SLA+W */
+    m = 0;
     TWDR = I2C_EEPROM_ADDR | TW_WRITE;
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
-    while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
-    switch ((twst = TW_STATUS)) {
+    while (((TWCR & _BV(TWINT)) == 0) & (m++ < MAX_ITER)) ; /* wait for transmission */
+    if (m == MAX_ITER) goto error;
+	switch ((twst = TW_STATUS)) {
         case TW_MT_SLA_ACK:
             break;
 
@@ -91,9 +95,11 @@ begin:
             goto error;		/* must send stop condition */
     }
 
+    m = 0;
     TWDR = ((uint16_t)eeaddr >> 8);		/* 16-bit word address device, send high 8 bits of addr */
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
-    while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
+    while (((TWCR & _BV(TWINT)) == 0) & (m++ < MAX_ITER)); /* wait for transmission */
+	if (m == MAX_ITER) goto error;
     switch ((twst = TW_STATUS)) {
         case TW_MT_DATA_ACK:
             break;
@@ -105,9 +111,11 @@ begin:
             goto error;		/* must send stop condition */
     }
 
+    m =0;
     TWDR = eeaddr;		/* low 8 bits of addr */
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
-    while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
+    while (((TWCR & _BV(TWINT)) == 0) & (m++ < MAX_ITER)) ; /* wait for transmission */
+	if (m == MAX_ITER) goto error;
     switch ((twst = TW_STATUS)) {
         case TW_MT_DATA_ACK:
             break;
@@ -123,8 +131,10 @@ begin:
     * Note [12]
     * Next cycle(s): master receiver mode
     */
+    m = 0;
     TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN); /* send (rep.) start condition */
-    while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
+    while (((TWCR & _BV(TWINT)) == 0) & (m++ < MAX_ITER)) ; /* wait for transmission */
+	if (m == MAX_ITER) goto error;
     switch ((twst = TW_STATUS)) {
         case TW_START:		// OK, but should not happen 
         case TW_REP_START:
@@ -136,9 +146,11 @@ begin:
     }
 
     /* send SLA+R */
+    m = 0;
     TWDR = I2C_EEPROM_ADDR | TW_READ;
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
-    while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
+    while (((TWCR & _BV(TWINT)) == 0) & (m++ < MAX_ITER)); /* wait for transmission */
+	if (m == MAX_ITER) goto error;
     switch ((twst = TW_STATUS)) {
         case TW_MR_SLA_ACK:
             break;
@@ -150,9 +162,11 @@ begin:
           goto error;
     }
 
+    m = 0;
     twcr = _BV(TWINT) | _BV(TWEN); /* send NAK this time */
     TWCR = twcr;		/* clear int to start transmission */
-    while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
+    while (((TWCR & _BV(TWINT)) == 0) & (m++ < MAX_ITER)); /* wait for transmission */
+	if (m == MAX_ITER) goto error;
     switch ((twst = TW_STATUS)) {
 	      case TW_MR_DATA_ACK:
 	      case TW_MR_DATA_NACK:
@@ -175,7 +189,7 @@ error:
 // (with SPI flash a page erase is used)
 static inline void EEPROM_invalidate()
 {
-    uint8_t n = 0;
+    uint8_t n = 0, m = 0;
 
 restart:
     if (n++ >= MAX_ITER)
@@ -183,8 +197,10 @@ restart:
 begin:
 
     /* Note [15] */
+    m = 0;
     TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN); /* send start condition */
-    while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
+    while (((TWCR & _BV(TWINT)) == 0) & (m++ < MAX_ITER)) ; /* wait for transmission */
+    if (m == MAX_ITER) return;
     switch ((twst = TW_STATUS)) {
 	      case TW_REP_START:		/* OK, but should not happen */
 	      case TW_START:
@@ -197,9 +213,11 @@ begin:
     }
 
     /* send SLA+W */
+    m = 0;
     TWDR = I2C_EEPROM_ADDR;
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
-    while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
+    while (((TWCR & _BV(TWINT)) == 0) & (m++ < MAX_ITER)) ; /* wait for transmission */
+    if (m == MAX_ITER) goto error;
     switch ((twst = TW_STATUS)) {
 	      case TW_MT_SLA_ACK:
 	          break;
@@ -211,9 +229,10 @@ begin:
 	          goto error;		/* must send stop condition */
     }
 
-    TWDR = 0;
+    TWDR = 0; m = 0;
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
-    while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
+    while (((TWCR & _BV(TWINT)) == 0) & (m++ < MAX_ITER)) ; /* wait for transmission */
+    if (m == MAX_ITER) goto error;
     switch ((twst = TW_STATUS)) {
 	      case TW_MT_DATA_ACK:
 	          break;
@@ -225,9 +244,11 @@ begin:
 	          goto error;		/* must send stop condition */
     }
 
+    m = 0;
     TWDR = 0;		/* low 8 bits of addr */
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
-    while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
+    while (((TWCR & _BV(TWINT)) == 0)  & (m++ < MAX_ITER)); /* wait for transmission */
+    if (m == MAX_ITER) goto error;
     switch ((twst = TW_STATUS)) {
 	      case TW_MT_DATA_ACK:
 	          break;
@@ -241,9 +262,10 @@ begin:
 
     // write 8 times 0xFF
     for (n=8; n ; n--) {
-	      TWDR = 0xFF;
+	      TWDR = 0xFF; m = 0;
 	      TWCR = _BV(TWINT) | _BV(TWEN); /* start transmission */
-	      while ((TWCR & _BV(TWINT)) == 0) ; /* wait for transmission */
+	      while (((TWCR & _BV(TWINT)) == 0)  & (m++ < MAX_ITER)); /* wait for transmission */
+	      if (m == MAX_ITER) goto error;
 	      switch ((twst = TW_STATUS)) {
 		        case TW_MT_DATA_NACK:
 		            goto error;		/* device write protected -- Note [16] */

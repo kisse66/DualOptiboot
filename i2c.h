@@ -63,10 +63,11 @@ begin:
     TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN); /* send start condition */
     while (((TWCR & _BV(TWINT)) == 0) && (m++ < MAX_TIMEOUT)) ; /* wait for transmission */
 	if (m > MAX_TIMEOUT) {
+#ifdef DEBUG_ON
 		putch('1');
+#endif
 		return 0xFF; 
 	}
-	
 	switch ((twst = TW_STATUS)) {
         case TW_REP_START:		// OK, but should not happen 
         case TW_START:
@@ -85,10 +86,11 @@ begin:
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
     while (((TWCR & _BV(TWINT)) == 0) && (m++ < MAX_TIMEOUT)) ; /* wait for transmission */
     if (m > MAX_TIMEOUT) {
+#ifdef DEBUG_ON
 		putch('2');
+#endif
 		goto error;
 	}
-	
 	switch ((twst = TW_STATUS)) {
         case TW_MT_SLA_ACK:
             break;
@@ -109,7 +111,9 @@ begin:
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
     while (((TWCR & _BV(TWINT)) == 0) && (m++ < MAX_TIMEOUT)); /* wait for transmission */
 	if (m > MAX_TIMEOUT) {
+#ifdef DEBUG_ON
 		putch('3');
+#endif
 		goto error;
 	}
 	switch ((twst = TW_STATUS)) {
@@ -128,7 +132,9 @@ begin:
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
     while (((TWCR & _BV(TWINT)) == 0) && (m++ < MAX_TIMEOUT)) ; /* wait for transmission */
 	if (m > MAX_TIMEOUT){
+#ifdef DEBUG_ON
 		putch('4');
+#endif
 		goto error;
 	}
 	switch ((twst = TW_STATUS)) {
@@ -150,7 +156,9 @@ begin:
     TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN); /* send (rep.) start condition */
     while (((TWCR & _BV(TWINT)) == 0) && (m++ < MAX_TIMEOUT)) ; /* wait for transmission */
 	if (m > MAX_TIMEOUT) {
+#ifdef DEBUG_ON
 		putch('5');
+#endif
 		goto error;
 	}
 	switch ((twst = TW_STATUS)) {
@@ -169,7 +177,9 @@ begin:
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
     while (((TWCR & _BV(TWINT)) == 0) && (m++ < MAX_TIMEOUT)); /* wait for transmission */
 	if (m > MAX_TIMEOUT) {
+#ifdef DEBUG_ON
 		putch('6');
+#endif
 		goto error;
 	}
 	switch ((twst = TW_STATUS)) {
@@ -188,7 +198,9 @@ begin:
     TWCR = twcr;		/* clear int to start transmission */
     while (((TWCR & _BV(TWINT)) == 0) && (m++ < MAX_TIMEOUT)); /* wait for transmission */
 	if (m > MAX_TIMEOUT) {
+#ifdef DEBUG_ON
 		putch('7');
+#endif
 		goto error;
 	}
 	switch ((twst = TW_STATUS)) {
@@ -225,7 +237,9 @@ begin:
     TWCR = _BV(TWINT) | _BV(TWSTA) | _BV(TWEN); /* send start condition */
     while (((TWCR & _BV(TWINT)) == 0) && (m++ < MAX_TIMEOUT)) ; /* wait for transmission */
     if (m > MAX_TIMEOUT) {
+#ifdef DEBUG_ON
 		putch('A');
+#endif
 		return;
 	}
     switch ((twst = TW_STATUS)) {
@@ -245,7 +259,9 @@ begin:
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
     while (((TWCR & _BV(TWINT)) == 0) && (m++ < MAX_TIMEOUT)) ; /* wait for transmission */
     if (m > MAX_TIMEOUT) {
+#ifdef DEBUG_ON
 		putch('B');
+#endif
 		goto error;
 	}
     switch ((twst = TW_STATUS)) {
@@ -263,7 +279,9 @@ begin:
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
     while (((TWCR & _BV(TWINT)) == 0) && (m++ < MAX_TIMEOUT)) ; /* wait for transmission */
     if (m > MAX_TIMEOUT) {
+#ifdef DEBUG_ON
 		putch('C');
+#endif
 		goto error;
 	}
     switch ((twst = TW_STATUS)) {
@@ -282,7 +300,9 @@ begin:
     TWCR = _BV(TWINT) | _BV(TWEN); /* clear interrupt to start transmission */
     while (((TWCR & _BV(TWINT)) == 0) && (m++ < MAX_TIMEOUT)); /* wait for transmission */
     if (m > MAX_TIMEOUT) {
+#ifdef DEBUG_ON
 		putch('D');
+#endif
 		goto error;
 	}
     switch ((twst = TW_STATUS)) {
@@ -302,7 +322,9 @@ begin:
 	      TWCR = _BV(TWINT) | _BV(TWEN); /* start transmission */
 	      while (((TWCR & _BV(TWINT)) == 0)  && (m++ < MAX_TIMEOUT)); /* wait for transmission */
 	      if (m > MAX_TIMEOUT) {
+#ifdef DEBUG_ON
 			putch('E');
+#endif
 			goto error;
 		  }
 	      switch ((twst = TW_STATUS)) {
